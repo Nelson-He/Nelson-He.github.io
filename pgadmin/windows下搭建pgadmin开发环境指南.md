@@ -10,7 +10,8 @@
 
 3. 安装巧克力包管理器：<https://blog.csdn.net/qq_38652871/article/details/103093447>
 
-4. 安装需要使用的各种命令行工具，命令如下：  
+4. 安装需要使用的各种命令行工具，命令如下：
+
 		choco install -y  bzip2 cmake diffutils gzip git innosetup nodejs-lts python strawberryperl wget yarn
 
 5. 升级pip  
@@ -32,6 +33,7 @@
 
 		mkdir c:\build64
 3. 下载zlib源码，并进行编译构建  
+
 		wget https://zlib.net/zlib-1.2.11.tar.gz  
 		tar -zxvf zlib-1.2.11.tar.gz  
 		cd zlib-1.2.1  
@@ -43,9 +45,10 @@
     * 【注意】 此处msbuild的顺序和README.txt中的不一致，若按照README中的顺序执行则第一个msbuild会报错
 
 4. 下载OpenSSL源码，并编译构建  
-		wget https://www.openssl.org/source/openssl-1.1.1g.tar.gz
-		tar -zxvf openssl-1.1.1g.tar.gz
-		cd openssl-1.1.1g
+
+		wget https://www.openssl.org/source/openssl-1.1.1g.tar.gz  
+		tar -zxvf openssl-1.1.1g.tar.gz  
+		cd openssl-1.1.1g  
 		perl Configure VC-WIN64A no-asm --prefix=C:\build64\openssl no-ssl2 no-ssl3 no-comp
 		nmake
 		nmake test
