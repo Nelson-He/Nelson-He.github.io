@@ -14,9 +14,11 @@
 		choco install -y  bzip2 cmake diffutils gzip git innosetup nodejs-lts python strawberryperl wget yarn
 
 5. 升级pip  
+
 		pip install --upgrade pip
 
 6. 安装virtualenv：  
+
 		pip install virtualenv
 
 7. 安装XXCOPY：<http://www.xxcopy.com/> 
@@ -27,6 +29,7 @@
 ## 后面所有章节的操作需要在vs2017的命令行提示符下进行
 1. 选择 **适用于 VS 2017 的 x64 本机工具命令提示**  
 2. 创建工作目录  
+
 		mkdir c:\build64
 3. 下载zlib源码，并进行编译构建  
 		wget https://zlib.net/zlib-1.2.11.tar.gz  
@@ -48,7 +51,8 @@
 		nmake test
 		nmake install
 
-5. 下载PostgreSQL源码并编译构建
+5. 下载PostgreSQL源码并编译构建  
+
 		wget https://ftp.postgresql.org/pub/source/v12.3/postgresql-12.3.tar.gz
 		tar -zxvf postgresql-12.3.tar.gz
 		cd postgresql-12.3\src\tools\msvc
@@ -86,7 +90,8 @@
 		copy C:\build64\openssl\bin\libssl-1_1-x64.dll C:\build64\pgsql\bin"
 		copy C:\build64\openssl\bin\libcrypto-1_1-x64.dll C:\build64\pgsql\bin"  
 
-## 安装淘宝npm源
+## 安装淘宝npm源  
+
 		npm install -g cnpm 
 		cnpm config set registry https://registry.npm.taobao.org --global
 		cnpm config set strict-ssl false
@@ -94,21 +99,25 @@
 ## 修改适配编译构建脚本Make.bat(如果不需要本地出windows安装包，以下步骤1到步骤5可不执行)
 1. 删除脚本第35行的签名工具调用
 2. 修改适配第55行~第61行的环境变量,修改为自己环境相关的
-3. 修改第199行、202行的yarn安装调用为cnpm安装调用，如下
+3. 修改第199行、202行的yarn安装调用为cnpm安装调用，如下  
+
 		CALL cnpm install || EXIT /B 1     -- 199行
 		CALL cnpm run bundle || EXIT /B 1  -- 202行
 4. 将204行的XCOPY修改为XXCOPY，原因如上所述，修改后如下
 		XXCOPY /S /I /E /H /Y "%WD%\web" "%BUILDROOT%\web" > nul || EXIT /B 1
-5. 将211行的FOR循环删除替换为如下两个DEL删除（在编译过程中发现FOR循环好像死循环了，一直在执行，无法退出，没有深究其原因）
+5. 将211行的FOR循环删除替换为如下两个DEL删除（在编译过程中发现FOR循环好像死循环了，一直在执行，无法退出，没有深究其原因）  
+
 		DEL /a /f /s /q  "%BUILDROOT%\web\*.pyc" 1> nul 2>&1
 		DEL /a /f /s /q  "%BUILDROOT%\web\*.pyo" 1> nul 2>&1
 
 ## 适配web目录下的package.json文件和webpack.config.js文件
-1. 将package.json文件中的第116行和120行命令中的yarn修改为cnpm，修改后的命令如下
+1. 将package.json文件中的第116行和120行命令中的yarn修改为cnpm，修改后的命令如下  
+
 		"webpacker:watch": "cnpm run webpack --config webpack.config.js --progress --watch",   -- 116行
 		"bundle": "cross-env NODE_ENV=production cnpm run bundle:dev",                         -- 120行
 
-2. 将webpack.config.js文件中的第195行到211行之间的装载器注释掉，如下
+2. 将webpack.config.js文件中的第195行到211行之间的装载器注释掉，如下  
+
 		//{
 		//  loader: 'image-webpack-loader',
 		//  query: {
@@ -131,12 +140,14 @@
 
 
 ## 搭建本地开发环境
-1. 安装JS依赖
+1. 安装JS依赖  
+
 		cd pgadmin4\web
 		cnpm install
 		cnpm run bundle
 
-2. 创建虚拟机环境
+2. 创建虚拟机环境  
+
 		cd pgadmin4
 		python -m venv venv
 		pip install -r web\regression\requirements.txt
