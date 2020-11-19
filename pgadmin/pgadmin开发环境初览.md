@@ -3,8 +3,10 @@
   执行以下python命令，启动pgadmin服务  
 		python ./web/pgAdmin4.py  
   控制台输出以下信息，表示可以在浏览器中本地浏览器中打开链接进行操作  
+  ![](https://github.com/Nelson-He/Nelson-He.github.io/blob/main/pictures/pgadmin/python_web_pgadmin.png)
 
-  登录界面如下
+  登录界面如下  
+  ![](https://github.com/Nelson-He/Nelson-He.github.io/blob/main/pictures/pgadmin/login.png)
 
   输入账户和密码后，登录系统，界面显示如下：
 
