@@ -18,3 +18,7 @@
 
   在首页会有一个“Add New Server”的快捷按钮，点击就可以创建数据库连接，配置连接参数后点击“Save”按钮保存并连接数据库。  
   ![](https://github.com/Nelson-He/Nelson-He.github.io/blob/main/pictures/pgadmin/setup_server.png)
+
+  输入连接参数后，连接数据库。在连接数据库时，要确保数据库的相关配置文件已经修改正确（postgresql.conf和pg_hba.conf)。
+  在数据库中创建一张表，在pgadmin中就可以刷新显示出来，如下
+  ![](https://github.com/Nelson-He/Nelson-He.github.io/blob/main/pictures/pgadmin/pgadmin_table_test.png)
