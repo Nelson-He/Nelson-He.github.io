@@ -10,6 +10,14 @@
 ## 7. 客户端接口  
 ## 8. 客户端应用程序  
 ## 9. 服务器应用程序  
+  * 为[pg_basebackup](http://postgres.cn/docs/11/app-pgbasebackup.html)增加一创建命名复制槽的选项  
+  使用WAL流式方法（--wal-method=stream）时，选项--create-slot可以用来创建命名复制槽(--slot)  
+  * 允许[initdb](http://postgres.cn/docs/11/app-initdb.html)设置对数据目录的组读取访问权限 
+  在initdb时可以通过--allow-group-access选项来实现该功能。管理员也可以在运行initdb之前对空数据目录设置组权限。服务器变量data_directory_mode允许读取数据目录组权限。  
+  * 新增[pg_verify_checksums](http://postgres.cn/docs/11/pgverifychecksums.html)工具以便离线时验证数据库校验和  
+  * 允许[pg_resetwal](http://postgres.cn/docs/11/app-pgresetwal.html)通过--wal-segsize修改WAL大小  
+  * 在pg_resetwal和pg_controldata中增加长选项  
+  * 为pg_receivewal增加--no-sync选项，控制阻止同步WAL写  
 ## 10. 源代码  
   * 增加了PGXS支持，以便安装头文件  
   这样可支持创建依赖其他模块的扩展模块。以前没有容易的方法让依赖模块找到所引用的模块的头文件。现有的几个定义数据类型的contrib模块已经调整，安装了相关文件。PL/Perl和PL/Python现在也安装了它们的头文件，以支持语言转换模块的创建
@@ -28,7 +36,6 @@
   * 增加代内存分配器以对顺序的分配/释放进行优化。这也减少了逻辑解码的内存使用  
   * 拉通VACUUM和ANALYZE对pg_class.reltuples的计算，使其计算结果一致  
   * 升级perltidy的版本到20170521
-  
   
 ## 11. 附加模块  
 * 允许[pg_prewarm](http://postgres.cn/docs/11/pgprewarm.html)启动时恢复以前的共享缓冲区内容  
