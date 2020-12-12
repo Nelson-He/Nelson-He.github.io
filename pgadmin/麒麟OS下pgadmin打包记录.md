@@ -247,5 +247,22 @@
 * (8) 执行脚本 pkg/redhat/build.sh  
 
 			[postgres@client-180 pgadmin]$ bash pkg/redhat/build.sh  
+
+  脚本执行完后，可以看到在dist目录下会生成几个rpm包，对于每个包的作用解释如下：  
+
+			pgadmin4-<version>.<distro>_noarch.rpm
+			A convenience package that depends on all the others.
+			
+			pgadmin4-server-<version>.<distro>.<arch>.rpm
+			The core server, e.g. the Python and JS code and the online documentation.
+			
+			pgadmin4-desktop-<version>.<distro>.<arch>.rpm
+			The desktop runtime. Requires the server package.
+			
+			pgadmin4-web-<version>.<distro>.<arch>.rpm
+			The server mode setup script for configuring Apache HTTPD. Requires the server package.
+			
+			pgadmin4-python3-mod_wsgi-4.7.1-2.el7.<arch>.rpm
+			The Python 3 build of mod_wsgi for the Apache HTTPD server. Only built on RHEL/CentOS 7.
       
       
