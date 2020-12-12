@@ -239,8 +239,8 @@
 			#
 			cp ${HOME}/rpmbuild/RPMS/${OS_ARCH}/${APP_NAME}-*${APP_LONG_VERSION}-*.${OS_ARCH}.rpm "${DISTROOT}/"
 			cp ${HOME}/rpmbuild/RPMS/noarch/${APP_NAME}-*${APP_LONG_VERSION}-*.noarch.rpm "${DISTROOT}/"
-			cp ${HOME}/rpmbuild/RPMS/${OS_ARCH}/pgadmin4-python3-mod_wsgi-4.7.1-2.el7.x86_64.rpm "${DISTROOT}/"
-			cp /opt/local/pgsql/lib  "${DISTROOT}/"
+			cp ${HOME}/rpmbuild/RPMS/${OS_ARCH}/pgadmin4-python3-mod_wsgi-4.7.1-*.rpm "${DISTROOT}/"
+			cp -rf /opt/local/pgsql/lib  "${DISTROOT}/" 
 			
 			echo "Completed. RPMs created in ${DISTROOT}."
 			
