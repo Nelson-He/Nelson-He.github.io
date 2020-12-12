@@ -1,5 +1,38 @@
 # PostgreSQL 11.0版本发布说明
-  * 原始链接：[E.3. 版本11](http://postgres.cn/docs/11/release-11.html)  
+  * 原始链接：[E.3. 版本11Release Notes](http://postgres.cn/docs/11/release-11.html)  
+             [PostgreSQL 11.0 正式版版本发布说明](http://www.postgres.cn/v2/release/v/53)  
+  
+  PostgreSQL 11 重点对系统性能进行提升，特别是在对大数据集和高计算负载的情况下进行了增强。尤其是PostgreSQL 11 对表分区的功能进行了重大的改变和提升，增加了内置事务管理的存储过程，，提升了并行查询能力和并行数据定义能力，也引入了JIT编译来加速查询中的表达式的计算执行。  
+  
+  ### 增强的健壮性和分区表性能的提升  
+  PostgreSQL 11 在目前版本已有了按值列表或是按范围作为分区键值的分区表功能外，又增加了按哈希键值分区的功能，也称之为“Hash分区”。 PostgreSQL 11 还通过在分区功能中使用外部数据封装器postgres_fdw的功能，也进一步提升了数据聚合能力。
+
+  为了帮助管理分区，PostgreSQL 11 引入了将不含有分区键值的记录自动转入缺省分区的功能，并增加了在（主表）执行创建主键、外键、索引和触发器时，会将这些操作全部自动复制给所有分区表的功能。另外PostgreSQL 11现在也支持当记录中的分区键值字段被更新后，会自动将该记录移至新的正确的分区表中的功能。
+
+  PostgreSQL 11 版本通过使用新的分区消除策略来提升查询分区表的性能。另外，PostgreSQL 11现在在分区表上也支持流行的“UPSERT”功能，这可以帮助用户在处理应用数据时，简化应用程序的开发，减少网络负载。
+  
+  ### 支持内置事务的存储过程  
+  在PostgreSQL 11版本前，函数是不能控制它们自己的事务的。PostgreSQL 11版本增加了SQL 标准存储过程的特性，并且支持在过程中执行完整的事务管理功能。这个新特性允许开发人员创建更多更高级的服务端应用，比如涉及大量数据的增量导入功能。
+
+SQL 过程是使用 CREATE PROCEDURE 指令创建，执行时使用 CALL 指令，现在服务端的过程语言有 PL/pgSQL、 PL/Perl、 PL/Python 和 PL/Tcl。  
+
+  ### 并行查询的增强  
+  PostgreSQL 11提升了并行查询的性能，通过更加有效的分区数据扫描，在并行顺序扫描和哈希聚合方面性能有了更大的改进。即使是组成UNION的查询子句不能并行处理时，PostgreSQL现在也可以对使用 UNION 的SELECT查询并行处理。
+
+PostgreSQL 11 也对几种数据集的定义指令增加了并行处理功能，最显著的就是通过 CREATE INDEX 指令创建的B-Tree索引。其他几种支持并行化操作的还有 CREATE TABLE .. AS 、 SELECT INTO 、 CREATE MATERIALIZED VIEW 等创建表和物化视图的操作。  
+
+  ### 表达式的 (JIT) 编译  
+  PostgreSQL 11 版本引入了JIT编译来加速查询中的表达式的计算和执行。JIT表达式的编译使用LLVM项目编译器的架构来提升在WHERE条件、指定列表、聚合、投影以及一些内部操作的表达式的编译执行。
+
+要使用JIT 编译，用户需要安装LLVM相关的依赖包，并在系统 中启用JIT编译，可通过在PostgreSQL的配置文件中设置 jit = on ，或是在 PostgreSQL 当前会话中执行 SET jit = on 指令均可启用JIT。
+
+  ### 一般性的用户体验提升  
+  对PostgreSQL关系数据库的改进，没有一个活跃的用户社区和PostgreSQL开发人员的长期努力工作，是不可能实现的。下面所列的都是PostgreSQL 11版本众多特性中的一些提升用户友好性的亮点：
+
+  改变 ALTER TABLE .. ADD COLUMN .. DEFAULT .. 指令在带有非 NULL 缺省值时需要重写整个表的操作，新的变化对这样的指令带来了极大的性能量级提升；
+  “覆盖索引”操作， 允许用户在创建一个索引通过使用 INCLUDE 选项来增加额外字段，这样会对无B-tree索引列的查询来使用Index-Only 的扫描有很大好处；
+  更多的窗口函数功能，包括允许 RANGE 来使用 PRECEDING / FOLLOWING 和 GROUPS，窗口的非包含功能等；
+  给PostgreSQL的命令行程序psql增加了关键字quit 和 exit ，以让用户（按各种习惯）更加容易退出这个程序。
   
 ## 1. 服务器  
 ## 2. 库备份和流复制  
