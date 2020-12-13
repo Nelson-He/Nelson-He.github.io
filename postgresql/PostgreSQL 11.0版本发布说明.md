@@ -51,9 +51,21 @@ PostgreSQL 11 也对几种数据集的定义指令增加了并行处理功能，
   * 允许分区表上的INSERT, UPDATE和COPY，将行正确地路由到外部分区。 该功能由postgres_fdw外部表支持。  
   * 允许查询处理时更快的分区排除。 这将加速对有许多分区的分区表的访问。
   * 允许查询执行期间分区消除。 以前，分区消除仅在计划期间发生，意味着许多连接和准备的查询不能使用分区消除。 
+  * 分区表之间等值连接时，允许匹配的分区直接连接。该特性缺省是禁用的，可修改[enable_partitionwise_join](http://postgres.cn/docs/11/runtime-config-query.html#GUC-ENABLE-PARTITIONWISE-JOIN)来启用  
+  * 允许分区表上的聚集函数对每个分区独立评估而后归并结果。该特性缺省是禁用的，可修改[enable_partitionwise_aggregate](http://postgres.cn/docs/11/runtime-config-query.html#GUC-ENABLE-PARTITIONWISE-AGGREGATE)来启用  
+  * 允许[postgres_fdw](http://postgres.cn/docs/11/postgres-fdw.html)将聚集下推到那些作为分区的外部表  
+### 1.2 并行查询  
+  * 允许并行构建btree索引  
+  * 允许使用共享哈希表并行执行哈希连接  
+  * 允许UNION并行运行每个SELECT，如果单个SELECT无法并行化的话  
+  * 允许使用并行工作者进行更有效的分区扫描  
+  * 允许将LIMIT传给并行工作者。这样允许工作者减少返回结果，使用有针对性的索引扫描。    
+  * 允许单次评估查询，例如WHERE子句聚集查询和目标列表中的函数并行化  
+  * 增加服务器参数[parallel_leader_participation](http://postgres.cn/docs/11/runtime-config-query.html#GUC-PARALLEL-LEADER-PARTICIPATION)用来控制领导者是否执行子计划。缺省启用，意味着领导者要执行子计划  
+  * 允许命令CREATE TABLE ... AS, SELECT INTO和CREATE MATERIALIZED VIEW并行化  
+  * 改进有许多并行工作者时顺序扫描的性能  
+  * 在EXPLAIN中增加并行工作者排序活动的报告  
   
-  
-
 ## 2. 库备份和流复制  
 ## 3. 实用工具命令  
 ## 4. 数据类型  
