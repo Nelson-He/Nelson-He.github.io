@@ -2,6 +2,7 @@
   * 原始链接：  
   [E.3. 版本11Release Notes](http://postgres.cn/docs/11/release-11.html)  
   [PostgreSQL 11.0 正式版版本发布说明](http://www.postgres.cn/v2/release/v/53)  
+  [Release 11 Appendix E. Release Notes](https://www.postgresql.org/docs/11/release-11.html)
   
   PostgreSQL 11 重点对系统性能进行提升，特别是在对大数据集和高计算负载的情况下进行了增强。尤其是PostgreSQL 11 对表分区的功能进行了重大的改变和提升，增加了内置事务管理的存储过程，提升了并行查询能力和并行数据定义能力，也引入了JIT编译来加速查询中的表达式的计算执行。  
   
@@ -37,11 +38,9 @@ PostgreSQL 11 也对几种数据集的定义指令增加了并行处理功能，
 ### 1.1 分区  
   * 允许创建基于键列哈希的分区  
   * 支持分区表上的索引  
-  分区表上的“索引”不是一种跨整个分区表的物理索引，而是一种自动创建表的每个分区上类似索引的模板。
-
-  如果分区键是索引列集的一部分，分区索引可声明为UNIQUE。它将代表跨整个分区表的有效唯一性约束，即使每个物理索引仅强制其自己分区内的唯一性。
-
-  新命令[LTER INDEX ATTACH PARTITION](http://postgres.cn/docs/11/sql-alterindex.html)使得分区表分区上已有索引与相配的索引模板关联。这样为已存在的分区表设置新的分区索引提供了灵活性。  
+  分区表上的“索引”不是一种跨整个分区表的物理索引，而是一种自动创建表的每个分区上类似索引的模板。  
+  如果分区键是索引列集的一部分，分区索引可声明为UNIQUE。它将代表跨整个分区表的有效唯一性约束，即使每个物理索引仅强制其自己分区内的唯一性。  
+  新命令[ALTER INDEX ATTACH PARTITION](http://postgres.cn/docs/11/sql-alterindex.html)使得分区表分区上已有索引与相配的索引模板关联。这样为已存在的分区表设置新的分区索引提供了灵活性。  
   * 允许分区表上的外键  
   * 允许分区表上的FOR EACH ROW触发器  
   创建分区表上的触发器，会自动创建所有已存在的和未来的分区上的触发器。这也允许分区表上可延迟的唯一约束  
@@ -65,14 +64,138 @@ PostgreSQL 11 也对几种数据集的定义指令增加了并行处理功能，
   * 允许命令CREATE TABLE ... AS, SELECT INTO和CREATE MATERIALIZED VIEW并行化  
   * 改进有许多并行工作者时顺序扫描的性能  
   * 在EXPLAIN中增加并行工作者排序活动的报告  
+### 1.3 索引  
+  * 允许B-树索引包含不是搜索键或唯一约束的，但可用于仅索引扫描读的列  
+  该功能可用[CREATE INDEX](http://postgres.cn/docs/11/sql-createindex.html)的新的INCLUDE子句来启用。它利用构造“覆盖索引”来优化特定类型的查询。可包含一些列，即使其数据类型B-树不支持
+  * 改进索引不断增长时的性能  
+  * 改进哈希索引扫描的性能  
+  * 为哈希、GiST和GIN索引添加谓词锁。这样减少了序列化模式事务中序列化冲突的可能性  
+#### 1.3.1 [SP-Gist](http://postgres.cn/docs/11/spgist.html)  
+  * 增加前缀匹配操作符text ^@ text，由SP-GiST支持此项功能。 这类似于btree索引时使用var LIKE 'word%'，但它更有效  
+  * 允许使用SP-GiST索引多边形  
+  * 允许SP-GiST使用叶子键的有损表示  
+### 1.4 优化器
+  * 改进统计信息最频值的选择  
+  以前，最频值(MCV)的标识是基于他们与所有列值比较的频度。现在MCV的选择是基于他们与非MCV值比较的频度。这样就改进了均匀和不均匀分布下的算法的健壮性  
+  * 改进>=和<=的选择性评估  
+  以前，此类案例如>和<分别使用同样的选择性评估，除非比较常数是MCV。该变化对使用BETWEEN在小区间查询特别有用  
+  * 在等效的地方将var =var简化为var IS NOT NULL。这会带来更好的选择性评估  
+  * 改进优化器对EXISTS和NOT EXISTS查询的行计数估计  
+  * 使优化器负责评估代价和HAVING子句的选择性  
+### 1.5 一般性能  
+  * 增加对查询计划的某些部分的[即时编译](http://postgres.cn/docs/11/jit.html)（JIT），以改进执行性能。该特性需LLVM可用。当前不是默认启用，即使在构建中支持也不是  
+  * 允许在可能时位图扫描执行仅索引扫描  
+  * 更新VACUUM时空闲空间映射。这样允许空闲空间能更快地重用  
+  * 允许VACUUM避免不必要的索引扫描  
+  * 改进多并发事务的提交性能  
+  * 减少那些在目标列表中使用集返回函数的查询的内存使用  
+  * 改进聚集计算的速度  
+  * 允许[postgres_fdw](http://postgres.cn/docs/11/postgres-fdw.html)将使用连接的UPDATE和DELETE命令推送到外部服务器。以前，仅推送非连接的UPDATE和DELETE命令  
+  * 增加Windows上的大页支持。该功能由huge_pages配置参数来控制  
+### 1.6 监控  
+  * 在log_statement_stats,log_parser_stats,log_planner_stats和log_executor_stats的输出中显示内存使用情况  
+  * 增加pg_stat_activity.backend_type列以显示后台工作者类型。该类型在ps输出中也可见  
+  * 使log_autovacuum_min_duration记录那些被同时删除而忽略掉的表   
+#### 1.6.1 信息模式  
+  * 增加与表约束和触发器相关的information_schema列  
+  特别是现在triggers.action_order,triggers.action_reference_old_table和triggers.action_reference_new_table都填有数据，而以前则总为空。此外，现在table_constraints.enforced虽然存在，但仍未填入有用数据  
+### 1.7 认证  
+  * 允许服务器在搜索+绑定模式中指定更为复杂的[LDAP](http://postgres.cn/docs/11/auth-ldap.html)规格要求。特别是ldapsearchfilter允许使用LDAP属性组合进行模式匹配    
+  * 允许LDAP认证使用加密的LDAP。 们已经支持TLS上的LDAP，这通过用ldaptls=1来实现。新的TLS LDAP是加密LDAP，用ldapscheme=ldaps或ldapurl=ldaps:// 来启用 
+  * 改进LDAP错误日志  
+### 1.8 权限  
+  * 增加启用文件系统访问的[默认角色](http://postgres.cn/docs/11/default-roles.html#DEFAULT-ROLES-TABLE)  
+  特别地，这些新角色是：pg_read_server_files,pg_write_server_files和pg_execute_server_program。这些角色现在还控制着谁可以使用服务器端COPY和file_fdw扩展。以前，仅超级用户才能使用这些功能，这仍然是默认行为  
+  * 允许用GRANT/REVOKE权限许可来控制文件系统函数的访问，而不是由超级用户检查来控制  
+  特别地，修改了这些函数：pg_ls_dir(),pg_read_file(),pg_read_binary_file(),pg_stat_file()  
+  * 使用GRANT/REVOKE控制对lo_import()和lo_export()的访问  
+  以前，仅超级用户才有权访问这些函数。编译时选项ALLOW_DANGEROUS_LO_FUNCTIONS已被移除  
+  * 防止对[postgres_fdw](http://postgres.cn/docs/11/postgres-fdw.html)表进行无密码访问时，使用视图拥有者而非会话拥有者  
+  PostgreSQL仅允许超级用户对postgres_fdw表进行无密码的访问，例如通过peer访问。以前，会话拥有者必须为超级用户才允许访问；现在以检查视图拥有者代之  
+  * 修复视图上SELECT FOR UPDATE的无效的锁权限检查问题  
+### 1.9 服务器配置  
+  * 增加服务器参数[ssl_passphrase_command](http://postgres.cn/docs/11/runtime-config-connection.html#GUC-SSL-PASSPHRASE-COMMAND)以允许提供SSL密钥文件的密语  
+  此外增加[ssl_passphrase_command_supports_reload](http://postgres.cn/docs/11/runtime-config-connection.html#GUC-SSL-PASSPHRASE-COMMAND-SUPPORTS-RELOAD)以详细说明SSL配置是否应重新载入，且服务器配置重新载入时是否调用ssl_passphrase_command  
+  * 增加存储参数[toast_tuple_target](http://postgres.cn/docs/11/sql-createtable.html#SQL-CREATETABLE-STORAGE-PARAMETERS)，以在考虑用TOAST存储前控制最小的元组长度。缺省的TOAST阈值不变
+  * 允许以字节为单位制定内存和文件大小相关的服务器选项。新单位后缀为“B”。已有的单位是“kB”, “MB”, “GB”和“TB”。  
+### 1.10 [预写日志](http://postgres.cn/docs/11/wal.html)（WAL）  
+  * 允许initdb时设置WAL文件大小。 以前，缺省值16MB只能在编译时改变   
+  * 仅为单个检查点保留WAL数据。 以前，为两个检查点保留WAL  
+  * 为提高压缩率，以零填充强制切换的WAL段文件的未使用部分   
   
 ## 2. 库备份和流复制  
+  * 使用流复制时，复制TRUNCATE活动  
+  * 将准备事务信息传给逻辑复制订阅者  
+  * 将非日志表、临时表和pg_internal.init文件从流式库备份中排除  
+  * 允许在流式库备份时验证堆页面的校验和  
+  * 允许复制槽以编程方式前进，而不是被订阅者消费。这样允许在没必要消费内容时，复制槽有效前进。此功能通过pg_replication_slot_advance()实现  
+  * 将时间线信息加到[backup_label](http://postgres.cn/docs/11/continuous-archiving.html#BACKUP-LOWLEVEL-BASE-BACKUP)文件中。另增WAL时间线与backup_label匹配的检查  
+  * 将主机和端口连接信息加到pg_stat_wal_receiver系统视图中  
+  
 ## 3. 实用工具命令  
+  * 允许ALTER TABLE用非空缺省值添加列，而不需重写表。当缺省值为常数时启用该项功能  
+  * 允许用视图所基于的表来锁定视图  
+  * 允许ALTER INDEX为表达式索引设置统计信息收集目标。在psql中，\d+现在显示索引的统计信息目标  
+  * 允许一条VACUUM或ANALYZE命令中指定多个表。此外，VACUUM中提及的任何表若使用列（字段）列表，则必须提供ANALYZE关键词；以前此类情况下ANALYZE是隐含在内的  
+  * 把括号括起来的选项语法增加到ANALYZE。这类似于VACUUM支持的语法  
+  * 增加CREATE AGGREGATE选项以指定聚集的终结函数的行为。这有助于允许用户定义聚集函数的优化、用作窗口函数  
+  
 ## 4. 数据类型  
+  * 允许创建域数组。这也允许array_agg()用在域上  
+  * 支持符合类型上的域。也允许PL/Perl, PL/Python和PL/Tcl处理复合域函数参数和结果。亦改进了PL/Python的域处理  
+  * 增加从JSONB标量到数字和布尔数据类型的类型转换  
+  
 ## 5. 函数  
+  * 增加SQL:2011指定的所有[窗口函数](http://postgres.cn/docs/11/sql-select.html#SQL-WINDOW)帧选项  
+  * 增加SHA-2哈希函数家族。特别地，增加sha224(),sha256(), sha384(),sha512()  
+  * 增加对64位非加密哈希函数的支持  
+  * 允许to_char()和to_timestamp()指定自UTC的时区偏移的小时和分钟。 这以TZH和TZM格式规范来实施 
+  * 增加搜索函数[websearch_to_tsquery()](http://postgres.cn/docs/11/functions-textsearch.html#TEXTSEARCH-FUNCTIONS-TABLE)，支持一种类似于Web搜索引擎使用的查询语法  
+  * 增加[json(b)\_to_tsvector()](http://postgres.cn/docs/11/functions-textsearch.html#TEXTSEARCH-FUNCTIONS-TABLE)函数以创建用于匹配JSON/JSONB值的文本搜索查询  
+  
 ## 6. 服务器端语言  
+  * 增加SQL级过程，在过程中能够开始和提交其自身的事务  
+  用新命令[CREATE PROCEDURE](http://postgres.cn/docs/11/sql-createprocedure.html)创建过程，用[CALL](http://postgres.cn/docs/11/sql-call.html)来调用  
+  新命令ALTER/DROP ROUTINE可以改变/删除所有类似程序的对象，包括过程、函数和聚集。而且在CREATE OPERATOR和CREATE TRIGGER时，现在写FUNCTION比写PROCEDURE好，因为引用的对象必须是函数而非过程。但是，为了兼容性，仍然接受过去的语法  
+  * 将事务控制增加到PL/pgSQL, PL/Perl, PL/Python, PL/Tcl和SPI服务器端语言中  
+  事务控制仅在顶部事务层过程和仅包含其它DO和CALL块的嵌套DO和CALL块中可用  
+  * 增加将PL/pgSQL复合类型变量定义为非空、常数或带初始值的功能  
+  * 允许PL/pgSQL处理同一会话中发生在第一次和后来函数执行之间对复合类型的修改。以前这些情况产生错误  
+  * 增加jsonb_plpython扩展以转换JSONB到/自PL/Python类型  
+  * 增加jsonb_plperl扩展以转换JSONB到/自PL/Perl类型  
+  
 ## 7. 客户端接口  
+  * 修改libpq，以禁用默认的压缩。现代的OpenSSL版本中，压缩已被禁用，故与这些库一起的libpq设置无效  
+  * 将DO CONTINUE选项加到ecpg的WHENEVER语句中。这会产生C的continue语句，特定条件发生时将导致返回含有它的循环的顶部  
+  * 增加ecpg模式以启用Oracle Pro\*C风格的字符数组处理方式。该模式用-C来启用  
+  
 ## 8. 客户端应用程序  
+### 8.1 psql  
+  * 增加psql命令\gdesc以显示查询结果中的列的名字和类型  
+  * 增加psql变量以报告查询活动或错误。这些新变量是ERROR,SQLSTATE, ROW_COUNT,LAST_ERROR_MESSAGE和LAST_ERROR_SQLSTATE  
+  * 允许psql测试一个变量是否存在。语法:{?variable_name}允许在\if语句中测试变量是否存在  
+  * 允许环境变量PSQL_PAGER控制psql的分页  
+  该项功能允许psql的缺省分页器可指定为单独环境变量，与其它应用程序分页器分开。如果PSQL_PAGER未设置，PAGER仍然起作用  
+  * 使psql的\d+命令总显示表分区信息  
+  以前如果无分区，分区表不会显示分区信息。现在也要显示哪些分区是如何划分的
+  * 确保psql提示输入密码时报告确切的用户名  
+  以前嵌入在URI中的-U和用户名的组合会导致错误的报告。当指定--password时，也会在密码提示之前禁止（显示）用户名  
+  * 允许没有先前输入时，使用quit和exit退出psql  
+  此外输入缓冲区非空时，若在一行中单独使用quit和exit，则打印如何退出的提示。对于help也添加了类似的提示  
+  * 在一行中单独输入了\q但被忽略时，让psql提示使用CTRL+D。例如，当\q是在字符串中给出时，该命令并不退出  
+  * 改进ALTER INDEX RESET/SET的制表符  
+  * 增加允许psql基于服务器版本适配其制表符自动补全查询的基础架构。以前对老版本服务器的制表符自动补全查询会失败  
+### 8.2 pgbench  
+  * 在pgbench中增加对NULL、布尔数和一些函数与操作符的表达式支持  
+  * 在pgbench中增加\if条件支持  
+  * 允许在pgbench变量名中使用非ASCII字符  
+  * 增加pgbench选项--init-steps以控制初始化步骤的执行  
+  * 将一种近似于Zipfian分布的随机数发生器添加到pgbench  
+  * 允许在pgbench中设置随机数种子  
+  * 允许pgbench用pow()和power()来做幂运算  
+  * 将哈希函数添加到pgbench  
+  * 当使用--latency-limit和--rate时，使pgbench统计更准确   
+  
 ## 9. 服务器应用程序  
   * 为[pg_basebackup](http://postgres.cn/docs/11/app-pgbasebackup.html)增加一创建命名复制槽的选项  
   使用WAL流式方法（--wal-method=stream）时，选项--create-slot可以用来创建命名复制槽(--slot)  
