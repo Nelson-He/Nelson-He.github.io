@@ -1,6 +1,6 @@
-# PostgreSQL插件之ora_migrator
+# PostgreSQL插件之oracle_fdw和ora_migrator
 
-ora_migrator基于oracle_fdw插件提供Oracle到PostgreSQL的迁移功能。该插件只能迁移序列和普通表以及普通表上的约束和索引。其他所有的对象，包括但不限于触发器、函数、存储过程等都需要迁移人员自己手工迁移。
+oracle_fdw为是PostgreSQL用来操作Oracle数据库的外部数据包装器，安装该插件后，可以在PostgreSQL中像操作本地表一样操作Oracle数据库中的表。ora_migrator则基于oracle_fdw插件提供Oracle到PostgreSQL的迁移功能。该插件只能迁移序列和普通表以及普通表上的约束和索引。其他所有的对象，包括但不限于触发器、函数、存储过程等都需要迁移人员自己手工迁移。
 
 除此之外，该插件还可以用来创建一些外部表和视图，以便在PostgreSQL中可以方便的访问Oracle。
 
@@ -305,9 +305,3 @@ ora_migrator基于oracle_fdw插件提供Oracle到PostgreSQL的迁移功能。该
   
   postgres=# 
   ```
-
-  
-
-  
-
-  
