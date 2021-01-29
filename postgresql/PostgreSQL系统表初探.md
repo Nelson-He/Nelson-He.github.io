@@ -36,7 +36,7 @@ else
 }
 ```
 
-* **综上信息，结合pg系统表，我们可以得到查询索引是升序还是降序的sql如下**
+* **也就是说，只要indoption字段为奇数，则该字段上就为desc，否则默认为asc。结合pg系统表，我们可以得到查询索引是升序还是降序的sql如下**
 
 ```sql
 SELECT
@@ -128,6 +128,28 @@ postgres-#     INNER JOIN pg_attribute ON (pg_attribute.attrelid = i.indrelid AN
 -----------+----------------+---------+-----------+---------+------------
  test_desc | test_asc_index | id1     |         1 | ASC     | NULLS LAST
 (1 row)
+
+postgres=# 
+
+---indoption奇偶数测试
+postgres=# create table test_desc(id1 bigint, id2 bigint);
+CREATE TABLE
+postgres=# create index test_desc_desc1 on test_desc(id1 desc nulls first);
+CREATE INDEX
+postgres=#  create index test_desc_desc2 on test_desc(id2 desc nulls last);
+CREATE INDEX
+postgres=#   SELECT
+postgres-#         pg_class.relname,
+postgres-#         pg_index.indrelid, pg_index.indclass, pg_index.indoption,
+postgres-#         unnest(pg_index.indkey) AS k
+postgres-#       FROM pg_index
+postgres-#       INNER JOIN pg_class ON pg_index.indexrelid = pg_class.oid
+postgres-#       WHERE relname like 'test_desc_desc%';
+     relname     | indrelid | indclass | indoption | k 
+-----------------+----------+----------+-----------+---
+ test_desc_desc1 |    30578 | 3124     | 3         | 1
+ test_desc_desc2 |    30578 | 3124     | 1         | 2
+(2 rows)
 
 postgres=# 
 ```
