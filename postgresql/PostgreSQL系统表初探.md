@@ -2,6 +2,44 @@
 
 在postgresql中，虽然有明确的视图来区分系统表上的索引和用户表上的索引，但是目前没有明确的手段来区分一个索引是用户手动创建的还是系统自动创建的。
 
+对于约束，系统默认会生成两个约束，其约束的conrelid为0，用户手动创建的约束会在pg_constraint系统表中生成一条记录，因此关联该系统表和pg_stat_user_tables即可获取用户表上的所有约束。
+
+无论是约束还是索引，都需要依赖其他对象，而对象之间的依赖关系可以通过pg_depend系统表查询得到。对于用户手动创建的依赖或者索引，其对象的依赖类型一般为DEPENDENCY_AUTO(a)或者DEPENDENCY_NORMAL(n)。
+
+查询用户表：
+
+```sql
+select relid , schemaname , relname from pg_stat_user_tables;
+```
+
+查询用户表上的所有约束
+
+```sql
+select conname, schemaname, contype, relname, consrc from pg_constraint inner join pg_stat_user_tables on conrelid= relid;
+```
+
+查询用户表上用户创建的约束
+
+```sql
+select conname, schemaname, contype, relname, consrc from pg_constraint inner join pg_stat_user_tables on conrelid= relid inner join pg_depend on conrelid = objid and  deptype in ('n', 'a');
+```
+
+查询用户表上的所有索引
+
+```sql
+select relid, indexrelid, schemaname, relname, indexrelname from pg_stat_user_indexes;
+```
+
+
+
+查询用户表上用户创建的索引：
+
+```sql
+select schemaname, relname, indexrelname from pg_stat_user_indexes inner join pg_depend on indexrelid = objid and  deptype in ('n', 'a');
+```
+
+
+
 ### 2. 索引的组成列中，索引列的升序和降序如何查询得知
 
 索引列的升序和降序信息，没有一个明确的字段来存储，只是在pg_index的indoption字段中有比特位来存储。
